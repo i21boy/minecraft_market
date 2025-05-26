@@ -1,43 +1,46 @@
 import csv
-def add_items():
-    item = input("Item Name: ")
-    price = input("Item price(coins) :")
-    seller = input("Seller name: ")
-    with open("market_csv", mode="a",newline="")as file:
-        writer= csv.writer(file)
-        writer.writerow([item ,price,seller])
-    print("Item added\n")
+import streamlit as st
+import pandas as pd
+import os
+
+def add_items(item, price, seller):
+    with open("market_csv", mode="a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([item, price, seller])
 
 def view_market():
     try:
-        with open("market_csv", mode="r", newline="")as file:
-            reader = csv.reader(file)
-            print("\n---Minecraft Market---")
-            print("{:20}{:10}{:<15}".format("item", "price", "seller"))
-            print("-"*50)
-            for row in reader:
-                print("{:<20}{:<10}{:<15}".format(*row))
-            print()
+        df = pd.read_csv("market_csv", names=["Item", "Price", "Seller"])
+        return df
     except FileNotFoundError:
-        print("Market in empty.\n")
+        return pd.DataFrame(columns=["Item", "Price", "Seller"])
 
 def main():
-    while True:
-        print("1. Add item for sale")
-        print("2. View market")
-        print("3. Exit")
+    st.title("Minecraft Market")
+    
+    # Sidebar for adding items
+    with st.sidebar:
+        st.header("Add New Item")
+        item = st.text_input("Item Name")
+        price = st.text_input("Price (coins)")
+        seller = st.text_input("Seller Name")
+        
+        if st.button("Add Item"):
+            if item and price and seller:
+                add_items(item, price, seller)
+                st.success("Item added successfully!")
+            else:
+                st.error("Please fill in all fields")
 
-        choice = input("Enter your choice: ")
-        if choice == "1":
-            add_items()
-        elif choice == "2":
-            view_market()
-        elif choice == "3":
-            break
+    # Main area for viewing market
+    st.header("Market Items")
+    df = view_market()
+    if not df.empty:
+        st.dataframe(df, use_container_width=True)
     else:
-        print("Invalid choice.\n")
+        st.info("Market is empty. Add some items!")
 
-if __name__== "__main__":
+if __name__ == "__main__":
     main()
 
             
