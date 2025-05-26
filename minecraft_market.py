@@ -14,6 +14,17 @@ def view_market():
         return df
     except FileNotFoundError:
         return pd.DataFrame(columns=["Item", "Price", "Seller"])
+    
+
+def delete_item(index):
+    try:
+        df = pd.read_csv("market_csv", names=["Item", "Price", "Seller"])
+        df = df.drop(index)
+        df.to_csv("market_csv", index=False, header=False)
+        return True
+    except Exception as e:
+        st.error("Error deleting item: {e}")
+        return False
 
 def main():
     st.title("Minecraft Market")
@@ -36,9 +47,19 @@ def main():
     st.header("Market Items")
     df = view_market()
     if not df.empty:
+        for idx, row in df.iterrows():
+            col1, col2 = st.columns([0.8, 0.2])
+            with col1:
+                st.write(f"Item: {row['Item']} - Price: {row['Price']} - Seller: {row['Seller']} ")
+            with col2:
+                if st.button("Delete", key=f"delete_{idx}"):
+                    if delete_item(idx):
+                        st.success("Item deleted!")
+                        st.rerun()
         st.dataframe(df, use_container_width=True)
     else:
         st.info("Market is empty. Add some items!")
+
 
 if __name__ == "__main__":
     main()
